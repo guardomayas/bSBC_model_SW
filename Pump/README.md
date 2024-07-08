@@ -32,3 +32,33 @@ Derivation: https://www.frontiersin.org/articles/10.3389/fncom.2017.00085/full
 
 
 $I_{P} = \rho_{N} \left( \frac{[\mathrm{K}^{+}]_{e}}{2 + [\mathrm{K}^{+}]_{e}}\right)^{2}\left( \frac{[\text{Na}^{+}]_{i}}{7.7 + [\text{Na}^{+}]_{i}}\right)^{3}$
+
+## There is also a Voltage dependent model
+The main advantage would be not having the need to model Na concentration. Howeverr, I'm concerned about peformarce
+
+- Clarifying the composition of the ATP consumption factors required for maintaining ion homeostasis in mouse rod photoreceptors uses that model
+    - Inspired by Gabriel's paper (https://rupress.org/jgp/article-standard/153/2/e202012687/211728/Loss-of-the-K-channel-Kv2-1-greatly-reduces). 
+
+# More functional papers
+
+- Spike integration and cellular memory in a rhythmic network from Na+/K+ pump current dynamics. https://www.nature.com/articles/nn.2444
+
+- Review: Sodium pump regulation of locomotor control circuits https://journals.physiology.org/doi/full/10.1152/jn.00066.2017 
+
+- Biophysics of Adaptation in a Computational Model of the Leech T Neuron. https://web.archive.org/web/20190223220507id_/http://pdfs.semanticscholar.org/4c24/2d9111fb990f28d2d1dd84f4178971ca486a.pdf 
+
+- Sodium pumps adapt spike bursting to stimulus statistics https://www.nature.com/articles/nn1982#Sec9
+
+- Intrinsic Mechanisms for Adaptive Gain Rescaling in Barrel Cortex. https://www.jneurosci.org/content/28/3/696
+
+- Bursting Dynamics Based on the Persistent Na1 and Na1/K1 Pump Currents: A Dynamic Clamp
+Approach
+
+# More computational
+
+- Nonlinear Interaction between Shunting and Adaptation Controls a Switch between Integration and Coincidence Detection in Pyramidal Neurons. https://www.jneurosci.org/content/26/36/9084.short
+
+- Diversity of Gain Modulation by Noise in Neocortical Neurons: Regulation by the Slow Afterhyperpolarization Conductance. https://www.jneurosci.org/content/26/34/8787 
+
+- Intrinsic Gain Modulation and Adaptive Neural Coding. https://journals.plos.org/ploscompbiol/article?id=10.1371/journal.pcbi.1000119#pcbi.1000119-Higgs1
+
