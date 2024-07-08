@@ -1,4 +1,4 @@
- 
+
 """ 
 
 Simple fly motor neuron model with NA/K pump as described in
@@ -287,85 +287,6 @@ while naih < naiH_end:
             def I_inj(t): # defines holding current injection
                 return I_hold*(t<tHold) + (I_hold + I_pulse)*(t>=tHold)*(t<tPulseEnd) + I_hold*(t>=tPulseEnd)*(t<t_end)
             
-            def I_testpulse(t): # defines test pulse injection
-                 """ This function allows for a single test pulse BEFORE the main step current injection and a SET of
-                 test pulses AFTER the main step current injection. 
-                 """
-                 global I_test
-                 I_test = 22.0 # Test Pulse Current, in pA
-                 
-                 ### Defining times for a test pulse BEFORE the main step current injection
-                 tTestPDur = .2*1000 # Test Pulse Duration in ms
-                 tTestPDelayPre = 5*1000 # TP time BEFORE main step current injection in ms
-                 tPreTestPStart = tHold - tTestPDelayPre - tTestPDur # Start time of the pre-injection test in ms
-                 tPreTestPEnd = tPreTestPStart + tTestPDur # End time of the pre-inject test pulse in ms
-                 
-                 ### Defining times for test pulses AFTER the current injection
-                 global tTestPDelayPost
-                 tTestPDelayPost = 55*1000 # Amount of Delay / Wait Time AFTER the main step current injection
-                 tPostTestStart = tPulseEnd + tTestPDelayPost # Time of first test pulse start after main step current injection
-                 tPostTestPPeriod = 10000*1000 # Time between post-injection test pulses
-                 
-                 return (I_test*(t>=tPreTestPStart)*(t<tPreTestPEnd) 
-                    + I_test*((t-tPostTestStart)>=0)*(((t-tPostTestStart)%tPostTestPPeriod)<tTestPDur))
-                
-            ### Defining the ramp current
-            ramp0 = 90 # Ramp Current Amplitude, in pA
-            tRampDur = 2*1000 # Ramp Duration (Up and Down), in ms
-            
-            ### Defining times for a ramp current BEFORE the main current injection
-            tRampDelayPre = .5*1000 # Ramp Delay before the current injection time, in ms
-            tPreRampStart = tHold - tRampDelayPre - tRampDur # Start Time of the Pre-Injection Ramp
-            tPreRampPeakTime = tPreRampStart + (tRampDur/2) # Time to the peak of the Ramp from the beginning of the simulation
-            tPreRampEnd = tPreRampStart + tRampDur # Time to the end of the ramp
-
-            ### Defining times for a ramp current AFTER the main current injection
-            tRampDelayPost = 4000*1000 # Ramp Delay after the end of the current injection duration
-            tPostRampStart = tPulseEnd + tRampDelayPost # Start time of the post-injection Ramp
-            tPostRampPeakTime = tPostRampStart + (tRampDur/2) # Time to the Peak of the Post-Injection ramp
-            tPostRampEnd = tPostRampStart + tRampDur # Time to the end of the post-injection ramp
-                
-            def I_ramp(t):
-                """ This function allows for a ramp up and ramp down current injection """
-                return  (ramp0*((t-tPreRampStart)/(tRampDur/2))*(t>=tPreRampStart)*(t<tPreRampPeakTime) 
-                         + ramp0*(1 - (t-tPreRampPeakTime)/(tRampDur/2))*(t>=tPreRampPeakTime)*(t<tPreRampEnd)
-                         + ramp0*((t-tPostRampStart)/(tRampDur/2))*(t>=tPostRampStart)*(t<tPostRampPeakTime) 
-                         + ramp0*(1 - (t-tPostRampPeakTime)/(tRampDur/2))*(t>=tPostRampPeakTime)*(t<tPostRampEnd))
-            
-            ### Zap Current Properties
-            Zap_fMin = 0.1 / 1000 # Zap minimum Frequency in Hz / 1000
-            Zap_fMax = 5.0 / 1000  # Zap maximum Frequency in Hz / 1000
-            pi_phase0 = np.pi # inital phase shift, cos(pi) = 0
-            Zap_tmax = 40 * 1000 # zap duration in milliseconds
-            Zap_thalf = Zap_tmax * 0.5 # half of the zap duration
-            
-            ZapStartTime = 20 * 1000 # Start time for zap current (in milliseconds)
-            ZapPeakTime = ZapStartTime + (Zap_thalf) # Time half way through the full zap duration
-            ZapEndTime = ZapStartTime + Zap_tmax # Time to the end of the zap
-                
-            I_ZapMax = 22.0 #Zap Current Amplitude in pA
-            Lambda = (np.log(Zap_fMax/Zap_fMin)) / (Zap_thalf) #Lambda is the exponenial rising factor, see 'the paper'
-            
-            ### Creating Zap Function
-            def ZapFreq(t):
-                TimeFunc = t - (ZapStartTime + 1e-10) # instantaneous time of zap up in ms
-                TimeFunc0 = t - (ZapPeakTime + 1e-10) # instantaneeous time of zap down in ms
-                T_map = (-1 * TimeFunc0) + Zap_thalf # maps the times of the up swing, for creating mirrored frequency down swing           
-                FreqUP = (Zap_fMin / (Lambda*TimeFunc)) * (np.exp(Lambda*TimeFunc)-1) 
-                FreqDOWN = (Zap_fMin / (Lambda*T_map) ) * (np.exp(Lambda*T_map)-1)
-                return (FreqUP * (t>=ZapStartTime)*(t<ZapPeakTime) + 
-                        FreqDOWN * (t>=ZapPeakTime)*(t<ZapEndTime))
-
-            def I_Zap(t):
-                TimeFunc = t - (ZapStartTime + 1e-10) # instanteous time of up current in ms
-                TimeFunc0 = t - (ZapPeakTime + 1e-10) # instanteous time of down current in ms
-                T_map = (-1 * TimeFunc0) + Zap_thalf # maps the times of the up swing, for creating mirrored frequency down swing        
-                FreqUP = (Zap_fMin / (Lambda*TimeFunc)) * (np.exp(Lambda*TimeFunc)-1) 
-                FreqDOWN = (Zap_fMin / (Lambda*T_map) ) * (np.exp(Lambda*T_map)-1)
-                ZapEQ_Up = (I_ZapMax * (0.5 + 0.5*np.cos(2*np.pi*FreqUP*TimeFunc + pi_phase0)))
-                ZapEQ_Down = (I_ZapMax * (0.5 + 0.5*np.cos(2*np.pi*FreqDOWN*T_map + pi_phase0)))
-                return ( ZapEQ_Up * (t>=ZapStartTime)*(t<ZapPeakTime) + 
-                         (ZapEQ_Down * (t>=ZapPeakTime)*(t<ZapEndTime) ) )   
                  
         ### ODEint (Runge-Kutta 4) Solver  
             def dALLdt(param_vec, t):
@@ -411,8 +332,6 @@ while naih < naiH_end:
             ### adds up all the applied current injections
             Inj_injectors = inj_switch*I_inj(t_vec) 
             + TP_switch*I_testpulse(t_vec) 
-            + ramp_switch*I_ramp(t_vec) 
-            + zap_switch*I_Zap(t_vec)
                     
             #Integrate
             y1 = odeint(dALLdt, param0, t_vec, rtol=1e-10, h0=.05, hmax=100.0)
@@ -514,21 +433,7 @@ while naih < naiH_end:
             mean_ifrs.append(mean_ifr_i)   
             ifr_array = np.asarray(ifr)
             
-            ### Ramp Current Array
-            rampcurrent_list = I_ramp(t_vec).tolist() 
-            instantRAMP = [] 
-            for h in range(0, len(peaks)-1):
-                instantRAMP.append(rampcurrent_list[peaks[h]])
-                h = h+1
-            instantRAMP_array = np.array(instantRAMP)
-            
-            ### Zap Current Array
-            zapcurrent_list = I_Zap(t_vec).tolist() 
-            instantZAP = [] 
-            for h in range(0,len(peaks)-1):
-                instantZAP.append(zapcurrent_list[peaks[h]])
-                h = h+1
-            instantZAP_array = np.array(instantZAP)
+        
             
             # Calculate Delay to Spike, in ms
             delay_i = []
@@ -600,78 +505,6 @@ while naih < naiH_end:
             except IndexError:
                 SpkINT = 0.0
                
-            ### Pandas File Saving 
-            ### Saving the Temporal Dynamics of Individual Traces
-            ### COMMENTED OUT, Used only for Data Collection
-            
-            ### Voltage-Time Saved Data
-            # DF_short = pd.DataFrame({'Time (ms)': t_vec, 
-            #                     'Voltage (pA)': Vcell, 
-            #                     'Injection': Inj_injectors})
-            # DF_short.to_csv("LMR" + str(model_switchsettings) + "Voltage Data " + str(I_pulse) + "pA," + filetime.strftime("%H_%M_%S, %m-%d-%Y.csv"), 
-            #           index = False)
-            
-            ### Test Pulses Saved Data / Short Temporal Data 
-            # DF_TP = pd.DataFrame({'Time (ms)': t_vec, 
-            #                     'Voltage (pA)': Vcell, 
-            #                     'Injection': Inj_injectors,
-            #                     '[Na]in Conc.': Nai,
-            #                     'Pump Current': I_pump(Nai)})
-            # DF_TP.to_csv("LaMouche " + str(model_switchsettings) + "," + str(I_pulse) + "pA Short Temporal Data " + filetime.strftime("%H_%M_%S, %m-%d-%Y.csv"), 
-            #           index = False)
-            ### Other Heading for Test Pulses
-            # DF_TP.to_csv("LMU TP " + str(I_test) + "pA, " + str(tTestPDelayPost/1000) +" sec Delay Data " + filetime.strftime("%H_%M_%S, %m-%d-%Y.csv"), 
-            #            index = False)
-               
-            ### Figure 2N Full Simulation Temporal Dynamics Saved Data
-            # DFLong = pd.DataFrame({'Time (ms)': t_vec, 
-            #                         'Voltage (mV)': Vcell, 
-            #                         'Injection (pA)': Inj_injectors,
-            #                         '[Na]in Conc.': Nai,
-            #                         'Dyn E_Na':E_NaSwitch(Nai),
-            #                         'Transient [Na]': I_NaT(Vcell, mNaT, hNaT, Nai),
-            #                         'Persistent [Na]': I_NaP(Vcell, mNaP, Nai),
-            #                         'Slow [K]': I_Ks(Vcell,n),
-            #                         'Fast [K]': I_Kf(Vcell, mKf, hKf1, hKf2),
-            #                         'Na+ Leak Current': I_leak_NA(Vcell, Nai),
-            #                         'K+ Leak Current':I_leak_K(Vcell),
-            #                         'Pump Current': I_pump(Nai)})
-            ### Title 1 for Default
-            # DFLong.to_csv("LMU Standard" + str(model_switchsettings) + str(I_pulse) + "pA," "Full Dynamics Data " + filetime.strftime("%H_%M_%S, %m-%d-%Y.csv"), 
-            #               index = False)
-            ### Title 2 for Zap
-            # DFLong.to_csv("LMU ZAP" + str(model_switchsettings) + str(I_ZapMax) + "pA," "Full Dynamics Data " + filetime.strftime("%H_%M_%S, %m-%d-%Y.csv"), 
-            #               index = False)
-            ### Titile 3 for Figure 8
-            #DFLong.to_csv("LMU Fig8,EX1" + str(model_switchsettings) + str(I_pulse) + "pA," "Full Dynamics Data " + filetime.strftime("%H_%M_%S, %m-%d-%Y.csv"), 
-                          # index = False)
-              
-            
-            # ### IFR and InstantINJ Data for Ramping Current
-            # DF_fr = pd.DataFrame({'SpkTime (ms)': realspktimesminusone_array, 
-            #                       'IFR (Hz)':ifr_array,
-            #                       'InstantINJ (pA)': instantRAMP_array})
-            # DF_fr.to_csv("LMR" + str(model_switchsettings) + "IFR, InstINJ Data " + str(tRampDur/1000) + "sec RampDur, " + filetime.strftime("%H_%M_%S, %m-%d-%Y.csv"), 
-            #           index = False)
-            
-            
-            # ### IFR and InstantINJ Data for Zap Current
-            # DF_fr = pd.DataFrame({'SpkTime (ms)': realspktimesminusone_array, 
-            #                       'IFR (Hz)':ifr_array,
-            #                       'InstantINJ (pA)': instantZAP_array})
-            # DF_fr.to_csv("LMU " + str(model_switchsettings) + "IFR ZAP" + str(I_ZapMax) + " Data " + filetime.strftime("%H_%M_%S, %m-%d-%Y.csv"), 
-            #           index = False)
-              
-            
-            # ### IFR Data for Normal Injection Current
-            # DF_fr = pd.DataFrame({'SpkTime (ms)': realspktimesminusone_array, 
-            #                           'IFR (Hz)':ifr_array,})
-            # # DF_fr.to_csv("LMR Default" + str(model_switchsettings) + " IFR Data at" + str(I_pulse) + filetime.strftime("%H_%M_%S, %m-%d-%Y.csv"), 
-            # #                index = False)
-            # #Alternative Title for Figure 8
-            # DF_fr.to_csv("LMU Fig8,EX1" + str(model_switchsettings) + " IFR Data at" + str(I_pulse) + filetime.strftime("%H_%M_%S, %m-%d-%Y.csv"), 
-            #               index = False)
-            
             ### Plotting Simulation Functions
             # Plot Voltage and stars the Peaks
             def plotPeaks():
