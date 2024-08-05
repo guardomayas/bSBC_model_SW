@@ -62,3 +62,4 @@ Approach
 
 - Intrinsic Gain Modulation and Adaptive Neural Coding. https://journals.plos.org/ploscompbiol/article?id=10.1371/journal.pcbi.1000119#pcbi.1000119-Higgs1
 
+- Pyramidal Neurons Switch From Integrators In Vitro to Resonators Under In Vivo-Like Conditions https://www.ncbi.nlm.nih.gov/pmc/articles/PMC2604842/
